@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="petcare_flutter"
+        android:label="PetCare"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
