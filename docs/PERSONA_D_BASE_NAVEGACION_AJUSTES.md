@@ -8,7 +8,7 @@
 
 Este documento detalla la parte de Persona D del [plan técnico](plan-tecnico-implementacion.md). Lo que no aparece aquí (modelo de datos, reglas de arquitectura, forma de trabajo) está en el plan y no se repite.
 
-**Estado:** nada implementado todavía. La tabla de la sección 8 se va llenando a medida que se avanza.
+**Estado:** Paso 0 fusionado en `main`. Ajustes (Paso 1) en revisión en el [PR #1](https://github.com/DumarMatamoros/PetCare-Flutter/pull/1). Falta la prueba manual en el emulador (sección 8).
 
 ## 2. Qué hay que construir
 
@@ -113,13 +113,13 @@ Manual, antes de avisar al grupo: registrar una cuenta desde una pantalla provis
 
 | Verificación | Estado |
 |---|---|
-| `flutter analyze` sin errores | Pendiente |
-| `flutter test` en verde | Pendiente |
-| Esquema SQL ejecutado y bucket creado | Pendiente |
-| Equipo invitado al proyecto Supabase y al repositorio | Pendiente |
-| La app arranca con `env.json` y conecta con Supabase | Pendiente |
-| Las diez rutas abren su pantalla provisional | Pendiente |
-| Sin sesión, las rutas protegidas llevan a `/sign-in` | Pendiente |
-| La sesión se restaura al reabrir la app | Pendiente |
-| Ajustes: tema y órdenes se guardan y se aplican | Pendiente |
-| Cerrar sesión vuelve a `/sign-in` | Pendiente |
+| `flutter analyze` sin errores | Hecho |
+| `flutter test` en verde | Hecho: 22 pruebas (`SesionViewModel`, `redirigir`, `AjustesViewModel`, `PreferenciasRepositoryImpl`) |
+| Esquema SQL ejecutado y bucket creado | Hecho: las tres tablas responden y RLS oculta los datos sin sesión. Confirmar que se aplicó en Supabase la corrección de la política `cuidados propios` (ver `supabase/esquema.sql`) |
+| Equipo invitado al proyecto Supabase y al repositorio | Repositorio: hecho (Josue, Marcelo y Yimmi son colaboradores). Supabase: por confirmar |
+| La app arranca con `env.json` y conecta con Supabase | Parcial: el APK compila y Supabase responde con las claves de `env.json`; falta abrirla en el emulador |
+| Las diez rutas abren su pantalla provisional | Pendiente (prueba manual) |
+| Sin sesión, las rutas protegidas llevan a `/sign-in` | Parcial: cubierto por las pruebas de `redirigir`; falta comprobarlo en el emulador |
+| La sesión se restaura al reabrir la app | Pendiente (prueba manual) |
+| Ajustes: tema y órdenes se guardan y se aplican | Parcial: cubierto por las pruebas; falta comprobarlo en el emulador |
+| Cerrar sesión vuelve a `/sign-in` | Pendiente (prueba manual) |
