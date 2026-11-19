@@ -1,0 +1,18 @@
+{
+  "java.import.exclusions": [
+    "**/node_modules/**",
+    "**/.metadata/**",
+    "**/archetype-resources/**",
+    "**/META-INF/maven/**",
+    "**/.idea/**",
+    "**/*.iml"
+  ],
+  "java.project.resourceFilters": [
+    "node_modules",
+    ".git",
+    ".idea",
+    ".dart_tool",
+    "build"
+  ],
+  "java.import.generatesMetadataFilesAtProjectRoot": false
+}
