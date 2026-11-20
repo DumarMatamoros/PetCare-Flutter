@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../features/auth/presentation/sesion_view_model.dart';
+import '../../features/auth/domain/auth_repository.dart';
+import '../../features/auth/presentation/auth_formulario_view_model.dart';
+import '../../features/auth/presentation/sign_in_screen.dart';
+import '../../features/auth/presentation/sign_up_screen.dart';
 import 'pantallas_provisionales.dart';
 
 /// Rutas a las que se entra sin sesión.
@@ -42,13 +47,17 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
     // --- Sin sesión (Persona A) ---
     GoRoute(
       path: '/sign-in',
-      builder: (context, state) =>
-          const FormularioSesionProvisional(esRegistro: false),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (context) => SignInViewModel(context.read<AuthRepository>()),
+        child: const SignInScreen(),
+      ),
     ),
     GoRoute(
       path: '/sign-up',
-      builder: (context, state) =>
-          const FormularioSesionProvisional(esRegistro: true),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (context) => SignUpViewModel(context.read<AuthRepository>()),
+        child: const SignUpScreen(),
+      ),
     ),
 
     // --- Con sesión, fuera de las pestañas ---
