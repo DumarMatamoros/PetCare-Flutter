@@ -7,6 +7,9 @@ import '../../features/auth/domain/auth_repository.dart';
 import '../../features/auth/presentation/auth_formulario_view_model.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/inicio/presentation/inicio_screen.dart';
+import '../../features/inicio/presentation/inicio_view_model.dart';
+import '../../features/mascotas/domain/mascota_repository.dart';
 import 'pantallas_provisionales.dart';
 
 /// Rutas a las que se entra sin sesión.
@@ -78,9 +81,11 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
           routes: [
             GoRoute(
               path: '/inicio',
-              builder: (context, state) => const PantallaProvisional(
-                titulo: 'Inicio',
-                enlaces: {'Tipos de cuidado': '/tipos-cuidado'},
+              builder: (context, state) => ChangeNotifierProvider(
+                create: (context) =>
+                    InicioViewModel(context.read<MascotaRepository>())
+                      ..cargar(),
+                child: const InicioScreen(),
               ),
             ),
           ],
