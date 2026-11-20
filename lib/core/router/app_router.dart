@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/ajustes/presentation/ajustes_screen.dart';
 import '../../features/auth/presentation/sesion_view_model.dart';
 import 'pantallas_provisionales.dart';
 
@@ -138,7 +139,7 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
           routes: [
             GoRoute(
               path: '/ajustes',
-              builder: (context, state) => const AjustesProvisional(),
+              builder: (context, state) => const AjustesScreen(),
             ),
           ],
         ),

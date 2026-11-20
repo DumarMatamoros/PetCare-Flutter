@@ -6,7 +6,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/provisional/repositorios_provisionales.dart';
 import 'core/router/app_router.dart';
 import 'core/tema/tema_app.dart';
+import 'features/ajustes/domain/preferencias.dart';
 import 'features/ajustes/domain/preferencias_repository.dart';
+import 'features/ajustes/presentation/ajustes_view_model.dart';
 import 'features/auth/data/auth_repository_impl.dart';
 import 'features/auth/data/auth_service.dart';
 import 'features/auth/domain/auth_repository.dart';
@@ -27,9 +29,18 @@ import 'features/tipos_cuidado/domain/tipo_cuidado_repository.dart';
 /// ),
 /// ```
 class PetCareApp extends StatelessWidget {
-  const PetCareApp({super.key, required this.cliente});
+  const PetCareApp({
+    super.key,
+    required this.cliente,
+    required this.preferenciasRepository,
+    required this.preferenciasIniciales,
+  });
 
   final SupabaseClient cliente;
+
+  /// Se crean en `main` porque las preferencias se leen antes de `runApp`.
+  final PreferenciasRepository preferenciasRepository;
+  final Preferencias preferenciasIniciales;
 
   @override
   Widget build(BuildContext context) {
@@ -56,13 +67,17 @@ class PetCareApp extends StatelessWidget {
         Provider<CuidadoRepository>(
           create: (_) => CuidadoRepositoryProvisional(),
         ),
-        Provider<PreferenciasRepository>(
-          create: (_) => PreferenciasRepositoryProvisional(),
-        ),
+        Provider<PreferenciasRepository>.value(value: preferenciasRepository),
 
         // ViewModels globales
         ChangeNotifierProvider<SesionViewModel>(
           create: (context) => SesionViewModel(context.read<AuthRepository>()),
+        ),
+        ChangeNotifierProvider<AjustesViewModel>(
+          create: (context) => AjustesViewModel(
+            context.read<PreferenciasRepository>(),
+            inicial: preferenciasIniciales,
+          ),
         ),
       ],
       child: const _AppConRouter(),
@@ -90,13 +105,16 @@ class _AppConRouterState extends State<_AppConRouter> {
 
   @override
   Widget build(BuildContext context) {
+    final tema = context.select<AjustesViewModel, Tema>((a) => a.tema);
     return MaterialApp.router(
       title: 'PetCare',
       debugShowCheckedModeBanner: false,
       theme: TemaApp.claro,
       darkTheme: TemaApp.oscuro,
-      // Paso 1: lo decidirá AjustesViewModel según la preferencia guardada.
-      themeMode: ThemeMode.light,
+      themeMode: switch (tema) {
+        Tema.claro => ThemeMode.light,
+        Tema.oscuro => ThemeMode.dark,
+      },
       routerConfig: _router,
     );
   }
