@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../features/auth/presentation/sesion_view_model.dart';
 import '../../features/auth/domain/auth_repository.dart';
 import '../../features/auth/presentation/auth_formulario_view_model.dart';
+import '../../features/auth/presentation/sesion_view_model.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/inicio/presentation/inicio_screen.dart';
 import '../../features/inicio/presentation/inicio_view_model.dart';
 import '../../features/mascotas/domain/mascota_repository.dart';
+import '../widgets/navegacion_principal.dart';
 import 'pantallas_provisionales.dart';
 
 /// Rutas a las que se entra sin sesión.
@@ -174,10 +175,7 @@ Widget _conId(GoRouterState state, Widget Function(int id) construir) {
   return construir(id);
 }
 
-/// Contenedor de las tres pestañas.
-///
-/// Persona A: aquí se cambia `NavigationBar` por `NavigationRail` en pantallas
-/// anchas. Avisa a Dumar antes de tocarlo.
+/// Contenedor adaptable de las tres pestañas.
 class ShellConPestanas extends StatelessWidget {
   const ShellConPestanas({super.key, required this.navegacion});
 
@@ -191,29 +189,10 @@ class ShellConPestanas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: navegacion,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navegacion.currentIndex,
-        onDestinationSelected: _irA,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.pets_outlined),
-            selectedIcon: Icon(Icons.pets),
-            label: 'Mascotas',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Ajustes',
-          ),
-        ],
-      ),
+    return NavegacionPrincipal(
+      indiceActual: navegacion.currentIndex,
+      onSeleccionar: _irA,
+      child: navegacion,
     );
   }
 }
