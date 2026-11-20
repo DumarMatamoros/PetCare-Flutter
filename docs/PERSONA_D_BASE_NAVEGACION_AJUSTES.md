@@ -8,7 +8,7 @@
 
 Este documento detalla la parte de Persona D del [plan técnico](plan-tecnico-implementacion.md). Lo que no aparece aquí (modelo de datos, reglas de arquitectura, forma de trabajo) está en el plan y no se repite.
 
-**Estado:** Paso 0 fusionado en `main`. Ajustes (Paso 1) en revisión en el [PR #1](https://github.com/DumarMatamoros/PetCare-Flutter/pull/1). Falta la prueba manual en el emulador (sección 8).
+**Estado:** Paso 0 fusionado en `main`. Ajustes (Paso 1) en revisión en el [PR #1](https://github.com/DumarMatamoros/PetCare-Flutter/pull/1). Prueba manual en el emulador hecha (sección 8); faltan confirmar dos puntos de Supabase.
 
 ## 2. Qué hay que construir
 
@@ -117,9 +117,9 @@ Manual, antes de avisar al grupo: registrar una cuenta desde una pantalla provis
 | `flutter test` en verde | Hecho: 22 pruebas (`SesionViewModel`, `redirigir`, `AjustesViewModel`, `PreferenciasRepositoryImpl`) |
 | Esquema SQL ejecutado y bucket creado | Hecho: las tres tablas responden y RLS oculta los datos sin sesión. Confirmar que se aplicó en Supabase la corrección de la política `cuidados propios` (ver `supabase/esquema.sql`) |
 | Equipo invitado al proyecto Supabase y al repositorio | Repositorio: hecho (Josue, Marcelo y Yimmi son colaboradores). Supabase: por confirmar |
-| La app arranca con `env.json` y conecta con Supabase | Parcial: el APK compila y Supabase responde con las claves de `env.json`; falta abrirla en el emulador |
-| Las diez rutas abren su pantalla provisional | Pendiente (prueba manual) |
-| Sin sesión, las rutas protegidas llevan a `/sign-in` | Parcial: cubierto por las pruebas de `redirigir`; falta comprobarlo en el emulador |
-| La sesión se restaura al reabrir la app | Pendiente (prueba manual) |
-| Ajustes: tema y órdenes se guardan y se aplican | Parcial: cubierto por las pruebas; falta comprobarlo en el emulador |
-| Cerrar sesión vuelve a `/sign-in` | Pendiente (prueba manual) |
+| La app arranca con `env.json` y conecta con Supabase | Hecho: en el emulador, Sign up crea la cuenta y entra a Inicio; con contraseña incorrecta muestra "Correo o contraseña incorrectos" |
+| Las diez rutas abren su pantalla | Hecho: las nueve provisionales y `AjustesScreen`; `/tipos-cuidado` se abre sin pestañas, como está previsto |
+| Sin sesión, las rutas protegidas llevan a `/sign-in` | Hecho: sin sesión la app abre en Sign in; también cubierto por las pruebas de `redirigir` |
+| La sesión se restaura al reabrir la app | Hecho: tras forzar el cierre del proceso, la app vuelve a abrir en Inicio sin pedir sesión |
+| Ajustes: tema y órdenes se guardan y se aplican | Hecho: el tema oscuro y los dos órdenes se mantienen al reabrir la app y al volver a iniciar sesión |
+| Cerrar sesión vuelve a `/sign-in` | Hecho: "Cancelar" no cierra la sesión; confirmar lleva a Sign in |
