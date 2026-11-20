@@ -12,11 +12,14 @@ import 'package:petcare_flutter/features/auth/domain/usuario.dart';
 import 'package:petcare_flutter/features/auth/presentation/sesion_view_model.dart';
 import 'package:petcare_flutter/features/mascotas/domain/mascota.dart';
 import 'package:petcare_flutter/features/mascotas/domain/mascota_repository.dart';
+import 'package:petcare_flutter/features/tipos_cuidado/domain/tipo_cuidado_repository.dart';
 import 'package:provider/provider.dart';
 
 class _AuthRepository extends Mock implements AuthRepository {}
 
 class _MascotaRepository extends Mock implements MascotaRepository {}
+
+class _TipoCuidadoRepository extends Mock implements TipoCuidadoRepository {}
 
 void main() {
   const ana = Usuario(id: 'u1', correo: 'ana@correo.com');
@@ -24,15 +27,20 @@ void main() {
   late StreamController<Usuario?> cambios;
   late _AuthRepository auth;
   late _MascotaRepository mascotas;
+  late _TipoCuidadoRepository tiposCuidado;
   late GoRouter router;
 
   Future<void> montar(WidgetTester tester, {Usuario? usuario}) async {
     cambios = StreamController<Usuario?>();
     auth = _AuthRepository();
     mascotas = _MascotaRepository();
+    tiposCuidado = _TipoCuidadoRepository();
+
     when(() => auth.usuarioActual).thenReturn(usuario);
     when(() => auth.cambiosDeSesion).thenAnswer((_) => cambios.stream);
     when(mascotas.obtenerMascotas).thenAnswer((_) async => [luna]);
+    when(tiposCuidado.obtenerTipos).thenAnswer((_) async => []);
+
     final sesion = SesionViewModel(auth);
     router = crearRouter(sesion);
     addTearDown(() async {
@@ -50,6 +58,7 @@ void main() {
         providers: [
           Provider<AuthRepository>.value(value: auth),
           Provider<MascotaRepository>.value(value: mascotas),
+          Provider<TipoCuidadoRepository>.value(value: tiposCuidado),
           ChangeNotifierProvider<SesionViewModel>.value(value: sesion),
         ],
         child: MaterialApp.router(theme: TemaApp.claro, routerConfig: router),

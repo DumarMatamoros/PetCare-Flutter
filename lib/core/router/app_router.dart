@@ -7,9 +7,17 @@ import '../../features/auth/presentation/auth_formulario_view_model.dart';
 import '../../features/auth/presentation/sesion_view_model.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/cuidados/domain/cuidado_repository.dart';
+import '../../features/cuidados/presentation/cuidado_form_screen.dart';
+import '../../features/cuidados/presentation/cuidado_form_view_model.dart';
+import '../../features/cuidados/presentation/detalle_mascota_screen.dart';
+import '../../features/cuidados/presentation/detalle_mascota_view_model.dart';
 import '../../features/inicio/presentation/inicio_screen.dart';
 import '../../features/inicio/presentation/inicio_view_model.dart';
 import '../../features/mascotas/domain/mascota_repository.dart';
+import '../../features/tipos_cuidado/domain/tipo_cuidado_repository.dart';
+import '../../features/tipos_cuidado/presentation/tipos_cuidado_screen.dart';
+import '../../features/tipos_cuidado/presentation/tipos_cuidado_view_model.dart';
 import '../widgets/navegacion_principal.dart';
 import 'pantallas_provisionales.dart';
 
@@ -27,17 +35,6 @@ String? redirigir({required bool haySesion, required String ruta}) {
 }
 
 /// Crea el router de la app. Se crea una sola vez, en `app.dart`.
-///
-/// Cada persona cambia su `PantallaProvisional` por la pantalla real, envuelta
-/// en un `ChangeNotifierProvider` que crea su ViewModel:
-///
-/// ```dart
-/// builder: (context, state) => ChangeNotifierProvider(
-///   create: (context) =>
-///       MascotasViewModel(context.read<MascotaRepository>())..cargar(),
-///   child: const MascotasScreen(),
-/// ),
-/// ```
 GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
   initialLocation: '/inicio',
   refreshListenable: sesion,
@@ -64,12 +61,15 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
       ),
     ),
 
-    // --- Con sesión, fuera de las pestañas ---
-    // Catálogo de tipos de cuidado (Persona C). Se abre desde Inicio.
+    // Catálogo de tipos de cuidado (Persona C).
     GoRoute(
       path: '/tipos-cuidado',
-      builder: (context, state) =>
-          const PantallaProvisional(titulo: 'Tipos de cuidado'),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (context) =>
+            TiposCuidadoViewModel(context.read<TipoCuidadoRepository>())
+              ..cargar(),
+        child: const TiposCuidadoScreen(),
+      ),
     ),
 
     // --- Con sesión, en pestañas ---
@@ -115,12 +115,13 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
                   path: ':id',
                   builder: (context, state) => _conId(
                     state,
-                    (id) => PantallaProvisional(
-                      titulo: 'Detalle de mascota $id',
-                      enlaces: {
-                        'Editar': '/mascotas/$id/editar',
-                        'Registrar cuidado': '/mascotas/$id/cuidados/nuevo',
-                      },
+                    (id) => ChangeNotifierProvider(
+                      create: (context) => DetalleMascotaViewModel(
+                        id,
+                        context.read<MascotaRepository>(),
+                        context.read<CuidadoRepository>(),
+                      )..cargar(),
+                      child: const DetalleMascotaScreen(),
                     ),
                   ),
                   routes: [
@@ -136,8 +137,13 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
                       path: 'cuidados/nuevo',
                       builder: (context, state) => _conId(
                         state,
-                        (id) => PantallaProvisional(
-                          titulo: 'Registrar cuidado de mascota $id',
+                        (id) => ChangeNotifierProvider(
+                          create: (context) => CuidadoFormViewModel(
+                            id,
+                            context.read<TipoCuidadoRepository>(),
+                            context.read<CuidadoRepository>(),
+                          )..cargarTipos(),
+                          child: const CuidadoFormScreen(),
                         ),
                       ),
                     ),

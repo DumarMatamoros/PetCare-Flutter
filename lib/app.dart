@@ -11,21 +11,18 @@ import 'features/auth/data/auth_repository_impl.dart';
 import 'features/auth/data/auth_service.dart';
 import 'features/auth/domain/auth_repository.dart';
 import 'features/auth/presentation/sesion_view_model.dart';
+import 'features/cuidados/data/cuidado_repository_impl.dart';
+import 'features/cuidados/data/cuidado_service.dart';
 import 'features/cuidados/domain/cuidado_repository.dart';
 import 'features/mascotas/domain/mascota_repository.dart';
+import 'features/tipos_cuidado/data/tipo_cuidado_repository_impl.dart';
+import 'features/tipos_cuidado/data/tipo_cuidado_service.dart';
 import 'features/tipos_cuidado/domain/tipo_cuidado_repository.dart';
 
 /// Raíz de la app: entrega las dependencias con Provider y monta el router.
 ///
 /// Orden: cliente de Supabase → servicios → repositorios (registrados por su
-/// contrato) → ViewModels globales. Para registrar tu repositorio real,
-/// cambia su línea provisional, por ejemplo:
-///
-/// ```dart
-/// Provider<MascotaRepository>(
-///   create: (context) => MascotaRepositoryImpl(context.read<MascotaService>()),
-/// ),
-/// ```
+/// contrato) → ViewModels globales.
 class PetCareApp extends StatelessWidget {
   const PetCareApp({super.key, required this.cliente});
 
@@ -42,6 +39,13 @@ class PetCareApp extends StatelessWidget {
         Provider<AuthService>(
           create: (context) => AuthService(context.read<SupabaseClient>()),
         ),
+        Provider<TipoCuidadoService>(
+          create: (context) =>
+              TipoCuidadoService(context.read<SupabaseClient>()),
+        ),
+        Provider<CuidadoService>(
+          create: (context) => CuidadoService(context.read<SupabaseClient>()),
+        ),
 
         // Repositorios
         Provider<AuthRepository>(
@@ -51,10 +55,12 @@ class PetCareApp extends StatelessWidget {
           create: (_) => MascotaRepositoryProvisional(),
         ),
         Provider<TipoCuidadoRepository>(
-          create: (_) => TipoCuidadoRepositoryProvisional(),
+          create: (context) =>
+              TipoCuidadoRepositoryImpl(context.read<TipoCuidadoService>()),
         ),
         Provider<CuidadoRepository>(
-          create: (_) => CuidadoRepositoryProvisional(),
+          create: (context) =>
+              CuidadoRepositoryImpl(context.read<CuidadoService>()),
         ),
         Provider<PreferenciasRepository>(
           create: (_) => PreferenciasRepositoryProvisional(),
