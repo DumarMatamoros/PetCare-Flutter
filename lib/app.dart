@@ -14,6 +14,9 @@ import 'features/auth/presentation/sesion_view_model.dart';
 import 'features/cuidados/data/cuidado_repository_impl.dart';
 import 'features/cuidados/data/cuidado_service.dart';
 import 'features/cuidados/domain/cuidado_repository.dart';
+import 'features/mascotas/data/mascota_repository_impl.dart';
+import 'features/mascotas/data/mascota_service.dart';
+import 'features/mascotas/domain/guardar_mascota_use_case.dart';
 import 'features/mascotas/domain/mascota_repository.dart';
 import 'features/tipos_cuidado/data/tipo_cuidado_repository_impl.dart';
 import 'features/tipos_cuidado/data/tipo_cuidado_service.dart';
@@ -46,13 +49,21 @@ class PetCareApp extends StatelessWidget {
         Provider<CuidadoService>(
           create: (context) => CuidadoService(context.read<SupabaseClient>()),
         ),
+        Provider<MascotaService>(
+          create: (context) => MascotaService(context.read<SupabaseClient>()),
+        ),
 
         // Repositorios
         Provider<AuthRepository>(
           create: (context) => AuthRepositoryImpl(context.read<AuthService>()),
         ),
         Provider<MascotaRepository>(
-          create: (_) => MascotaRepositoryProvisional(),
+          create: (context) =>
+              MascotaRepositoryImpl(context.read<MascotaService>()),
+        ),
+        Provider<GuardarMascotaUseCase>(
+          create: (context) =>
+              GuardarMascotaUseCase(context.read<MascotaRepository>()),
         ),
         Provider<TipoCuidadoRepository>(
           create: (context) =>

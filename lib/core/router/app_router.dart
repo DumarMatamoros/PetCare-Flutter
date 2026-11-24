@@ -19,6 +19,11 @@ import '../../features/tipos_cuidado/domain/tipo_cuidado_repository.dart';
 import '../../features/tipos_cuidado/presentation/tipos_cuidado_screen.dart';
 import '../../features/tipos_cuidado/presentation/tipos_cuidado_view_model.dart';
 import '../widgets/navegacion_principal.dart';
+import '../../features/mascotas/domain/guardar_mascota_use_case.dart';
+import '../../features/mascotas/presentation/mascota_form_screen.dart';
+import '../../features/mascotas/presentation/mascota_form_view_model.dart';
+import '../../features/mascotas/presentation/mascotas_screen.dart';
+import '../../features/mascotas/presentation/mascotas_view_model.dart';
 import 'pantallas_provisionales.dart';
 
 /// Rutas a las que se entra sin sesión.
@@ -97,19 +102,18 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
           routes: [
             GoRoute(
               path: '/mascotas',
-              builder: (context, state) => const PantallaProvisional(
-                titulo: 'Mis mascotas',
-                enlaces: {
-                  'Registrar mascota': '/mascotas/nueva',
-                  'Mascota 1': '/mascotas/1',
-                },
+              builder: (context, state) => ChangeNotifierProvider(
+                create: (context) =>
+                    MascotasViewModel(context.read<MascotaRepository>())
+                      ..cargar(),
+                child: const MascotasScreen(),
               ),
               routes: [
                 // `nueva` va antes que `:id`; si no, se leería como un id.
                 GoRoute(
                   path: 'nueva',
                   builder: (context, state) =>
-                      const PantallaProvisional(titulo: 'Registrar mascota'),
+                      _formularioMascota(context, null),
                 ),
                 GoRoute(
                   path: ':id',
@@ -129,8 +133,7 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
                       path: 'editar',
                       builder: (context, state) => _conId(
                         state,
-                        (id) =>
-                            PantallaProvisional(titulo: 'Editar mascota $id'),
+                        (id) => _formularioMascota(context, id),
                       ),
                     ),
                     GoRoute(
@@ -167,6 +170,16 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
     ),
   ],
 );
+
+Widget _formularioMascota(BuildContext context, int? id) =>
+    ChangeNotifierProvider(
+      create: (context) => MascotaFormViewModel(
+        context.read<MascotaRepository>(),
+        context.read<GuardarMascotaUseCase>(),
+        id,
+      )..cargar(),
+      child: const MascotaFormScreen(),
+    );
 
 /// Convierte `:id` a `int` y se lo pasa a [construir]. Las pantallas no leen
 /// parámetros de la ruta: reciben el id ya convertido.
