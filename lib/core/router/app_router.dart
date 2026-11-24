@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../features/auth/domain/auth_repository.dart';
+import '../../features/auth/presentation/auth_formulario_view_model.dart';
 import '../../features/auth/presentation/sesion_view_model.dart';
+import '../../features/auth/presentation/sign_in_screen.dart';
+import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/cuidados/domain/cuidado_repository.dart';
+import '../../features/cuidados/presentation/cuidado_form_screen.dart';
+import '../../features/cuidados/presentation/cuidado_form_view_model.dart';
+import '../../features/cuidados/presentation/detalle_mascota_screen.dart';
+import '../../features/cuidados/presentation/detalle_mascota_view_model.dart';
+import '../../features/inicio/presentation/inicio_screen.dart';
+import '../../features/inicio/presentation/inicio_view_model.dart';
+import '../../features/mascotas/domain/mascota_repository.dart';
+import '../../features/tipos_cuidado/domain/tipo_cuidado_repository.dart';
+import '../../features/tipos_cuidado/presentation/tipos_cuidado_screen.dart';
+import '../../features/tipos_cuidado/presentation/tipos_cuidado_view_model.dart';
+import '../widgets/navegacion_principal.dart';
 import 'pantallas_provisionales.dart';
 
 /// Rutas a las que se entra sin sesión.
@@ -18,17 +35,6 @@ String? redirigir({required bool haySesion, required String ruta}) {
 }
 
 /// Crea el router de la app. Se crea una sola vez, en `app.dart`.
-///
-/// Cada persona cambia su `PantallaProvisional` por la pantalla real, envuelta
-/// en un `ChangeNotifierProvider` que crea su ViewModel:
-///
-/// ```dart
-/// builder: (context, state) => ChangeNotifierProvider(
-///   create: (context) =>
-///       MascotasViewModel(context.read<MascotaRepository>())..cargar(),
-///   child: const MascotasScreen(),
-/// ),
-/// ```
 GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
   initialLocation: '/inicio',
   refreshListenable: sesion,
@@ -42,21 +48,28 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
     // --- Sin sesión (Persona A) ---
     GoRoute(
       path: '/sign-in',
-      builder: (context, state) =>
-          const FormularioSesionProvisional(esRegistro: false),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (context) => SignInViewModel(context.read<AuthRepository>()),
+        child: const SignInScreen(),
+      ),
     ),
     GoRoute(
       path: '/sign-up',
-      builder: (context, state) =>
-          const FormularioSesionProvisional(esRegistro: true),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (context) => SignUpViewModel(context.read<AuthRepository>()),
+        child: const SignUpScreen(),
+      ),
     ),
 
-    // --- Con sesión, fuera de las pestañas ---
-    // Catálogo de tipos de cuidado (Persona C). Se abre desde Inicio.
+    // Catálogo de tipos de cuidado (Persona C).
     GoRoute(
       path: '/tipos-cuidado',
-      builder: (context, state) =>
-          const PantallaProvisional(titulo: 'Tipos de cuidado'),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (context) =>
+            TiposCuidadoViewModel(context.read<TipoCuidadoRepository>())
+              ..cargar(),
+        child: const TiposCuidadoScreen(),
+      ),
     ),
 
     // --- Con sesión, en pestañas ---
@@ -69,9 +82,11 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
           routes: [
             GoRoute(
               path: '/inicio',
-              builder: (context, state) => const PantallaProvisional(
-                titulo: 'Inicio',
-                enlaces: {'Tipos de cuidado': '/tipos-cuidado'},
+              builder: (context, state) => ChangeNotifierProvider(
+                create: (context) =>
+                    InicioViewModel(context.read<MascotaRepository>())
+                      ..cargar(),
+                child: const InicioScreen(),
               ),
             ),
           ],
@@ -100,12 +115,13 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
                   path: ':id',
                   builder: (context, state) => _conId(
                     state,
-                    (id) => PantallaProvisional(
-                      titulo: 'Detalle de mascota $id',
-                      enlaces: {
-                        'Editar': '/mascotas/$id/editar',
-                        'Registrar cuidado': '/mascotas/$id/cuidados/nuevo',
-                      },
+                    (id) => ChangeNotifierProvider(
+                      create: (context) => DetalleMascotaViewModel(
+                        id,
+                        context.read<MascotaRepository>(),
+                        context.read<CuidadoRepository>(),
+                      )..cargar(),
+                      child: const DetalleMascotaScreen(),
                     ),
                   ),
                   routes: [
@@ -121,8 +137,13 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
                       path: 'cuidados/nuevo',
                       builder: (context, state) => _conId(
                         state,
-                        (id) => PantallaProvisional(
-                          titulo: 'Registrar cuidado de mascota $id',
+                        (id) => ChangeNotifierProvider(
+                          create: (context) => CuidadoFormViewModel(
+                            id,
+                            context.read<TipoCuidadoRepository>(),
+                            context.read<CuidadoRepository>(),
+                          )..cargarTipos(),
+                          child: const CuidadoFormScreen(),
                         ),
                       ),
                     ),
@@ -160,10 +181,7 @@ Widget _conId(GoRouterState state, Widget Function(int id) construir) {
   return construir(id);
 }
 
-/// Contenedor de las tres pestañas.
-///
-/// Persona A: aquí se cambia `NavigationBar` por `NavigationRail` en pantallas
-/// anchas. Avisa a Dumar antes de tocarlo.
+/// Contenedor adaptable de las tres pestañas.
 class ShellConPestanas extends StatelessWidget {
   const ShellConPestanas({super.key, required this.navegacion});
 
@@ -177,29 +195,10 @@ class ShellConPestanas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: navegacion,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navegacion.currentIndex,
-        onDestinationSelected: _irA,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.pets_outlined),
-            selectedIcon: Icon(Icons.pets),
-            label: 'Mascotas',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Ajustes',
-          ),
-        ],
-      ),
+    return NavegacionPrincipal(
+      indiceActual: navegacion.currentIndex,
+      onSeleccionar: _irA,
+      child: navegacion,
     );
   }
 }
