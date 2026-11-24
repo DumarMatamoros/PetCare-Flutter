@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:petcare_flutter/features/ajustes/domain/preferencias_repository.dart';
+import 'package:petcare_flutter/features/ajustes/presentation/ajustes_view_model.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +17,8 @@ import 'package:petcare_flutter/features/mascotas/domain/mascota.dart';
 import 'package:petcare_flutter/features/mascotas/domain/mascota_repository.dart';
 import 'package:petcare_flutter/features/tipos_cuidado/domain/tipo_cuidado_repository.dart';
 import 'package:provider/provider.dart';
+
+class _Preferencias extends Mock implements PreferenciasRepository {}
 
 class _AuthRepository extends Mock implements AuthRepository {}
 
@@ -38,6 +43,8 @@ void main() {
 
     when(() => auth.usuarioActual).thenReturn(usuario);
     when(() => auth.cambiosDeSesion).thenAnswer((_) => cambios.stream);
+    registerFallbackValue(luna);
+    when(() => mascotas.urlDeFoto(any())).thenAnswer((_) async => null);
     when(mascotas.obtenerMascotas).thenAnswer((_) async => [luna]);
     when(tiposCuidado.obtenerTipos).thenAnswer((_) async => []);
 
@@ -56,6 +63,9 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          ChangeNotifierProvider(
+            create: (_) => AjustesViewModel(_Preferencias()),
+          ),
           Provider<AuthRepository>.value(value: auth),
           Provider<MascotaRepository>.value(value: mascotas),
           Provider<TipoCuidadoRepository>.value(value: tiposCuidado),

@@ -1,9 +1,12 @@
+import '../../features/ajustes/presentation/ajustes_view_model.dart';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../features/auth/domain/auth_repository.dart';
 import '../../features/auth/presentation/auth_formulario_view_model.dart';
+import '../../features/ajustes/presentation/ajustes_screen.dart';
 import '../../features/auth/presentation/sesion_view_model.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
@@ -106,7 +109,9 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
                 create: (context) =>
                     MascotasViewModel(context.read<MascotaRepository>())
                       ..cargar(),
-                child: const MascotasScreen(),
+                child: MascotasScreen(
+                  orden: context.watch<AjustesViewModel>().ordenMascotas,
+                ),
               ),
               routes: [
                 // `nueva` va antes que `:id`; si no, se leería como un id.
@@ -162,7 +167,7 @@ GoRouter crearRouter(SesionViewModel sesion) => GoRouter(
           routes: [
             GoRoute(
               path: '/ajustes',
-              builder: (context, state) => const AjustesProvisional(),
+              builder: (context, state) => const AjustesScreen(),
             ),
           ],
         ),

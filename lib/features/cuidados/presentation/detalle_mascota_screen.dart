@@ -1,3 +1,6 @@
+import '../../ajustes/domain/preferencias.dart';
+import '../../ajustes/presentation/ajustes_view_model.dart';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -88,6 +91,13 @@ class DetalleMascotaScreen extends StatelessWidget {
     DetalleMascotaViewModel modelo,
   ) {
     final localizaciones = MaterialLocalizations.of(context);
+    final orden = context.watch<AjustesViewModel>().ordenHistorial;
+    final ordenados = [...cuidados]
+      ..sort(
+        (a, b) => orden == OrdenHistorial.masReciente
+            ? b.fecha.compareTo(a.fecha)
+            : a.fecha.compareTo(b.fecha),
+      );
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -179,7 +189,7 @@ class DetalleMascotaScreen extends StatelessWidget {
             if (cuidados.isEmpty)
               const Text('Aún no hay cuidados registrados.')
             else
-              ...cuidados.map((cuidado) {
+              ...ordenados.map((cuidado) {
                 final fecha = localizaciones.formatMediumDate(cuidado.fecha);
                 return ListTile(
                   contentPadding: EdgeInsets.zero,

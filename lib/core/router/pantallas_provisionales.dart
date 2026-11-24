@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../features/auth/domain/auth_repository.dart';
-import '../../features/auth/presentation/sesion_view_model.dart';
 import '../errores/fallo.dart';
 
 // Pantallas provisionales para que todas las rutas abran algo mientras cada
@@ -148,46 +147,6 @@ class _FormularioSesionProvisionalState
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Ajustes mínimo con "Cerrar sesión". Persona D lo reemplaza por
-/// `AjustesScreen`.
-class AjustesProvisional extends StatelessWidget {
-  const AjustesProvisional({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final sesion = context.watch<SesionViewModel>();
-    return Scaffold(
-      appBar: AppBar(title: const Text('Ajustes')),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Pantalla provisional\n${sesion.usuario?.correo ?? ''}',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () async {
-                try {
-                  await sesion.cerrarSesion();
-                } on Fallo catch (fallo) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text(fallo.mensaje)));
-                  }
-                }
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Cerrar sesión'),
-            ),
-          ],
-        ),
       ),
     );
   }
