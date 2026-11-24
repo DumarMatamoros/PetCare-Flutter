@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'core/config/entorno.dart';
 import 'core/sesion/almacen_sesion_seguro.dart';
+import 'features/ajustes/data/preferencias_repository_impl.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,14 +14,27 @@ Future<void> main() async {
     return;
   }
 
-  // Restaura la sesión guardada antes de pintar la primera pantalla.
-  await Supabase.initialize(
-    url: Entorno.supabaseUrl,
-    publishableKey: Entorno.supabaseAnonKey,
-    authOptions: FlutterAuthClientOptions(localStorage: AlmacenSesionSeguro()),
-  );
+  // Antes de pintar la primera pantalla se restaura la sesión y se leen las
+  // preferencias (así el tema oscuro no aparece primero en claro).
+  final preferenciasRepository = PreferenciasRepositoryImpl();
+  final (_, preferencias) = await (
+    Supabase.initialize(
+      url: Entorno.supabaseUrl,
+      publishableKey: Entorno.supabaseAnonKey,
+      authOptions: FlutterAuthClientOptions(
+        localStorage: AlmacenSesionSeguro(),
+      ),
+    ),
+    preferenciasRepository.leer(),
+  ).wait;
 
-  runApp(PetCareApp(cliente: Supabase.instance.client));
+  runApp(
+    PetCareApp(
+      cliente: Supabase.instance.client,
+      preferenciasRepository: preferenciasRepository,
+      preferenciasIniciales: preferencias,
+    ),
+  );
 }
 
 /// Se muestra si se ejecutó la app sin `--dart-define-from-file=env.json`.
