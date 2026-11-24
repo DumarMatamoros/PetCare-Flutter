@@ -91,13 +91,6 @@ class DetalleMascotaScreen extends StatelessWidget {
     DetalleMascotaViewModel modelo,
   ) {
     final localizaciones = MaterialLocalizations.of(context);
-    final orden = context.watch<AjustesViewModel>().ordenHistorial;
-    final ordenados = [...cuidados]
-      ..sort(
-        (a, b) => orden == OrdenHistorial.masReciente
-            ? b.fecha.compareTo(a.fecha)
-            : a.fecha.compareTo(b.fecha),
-      );
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -174,6 +167,13 @@ class DetalleMascotaScreen extends StatelessWidget {
     DetalleMascotaViewModel modelo,
   ) {
     final localizaciones = MaterialLocalizations.of(context);
+    final orden = context.watch<AjustesViewModel>().ordenHistorial;
+    final ordenados = [...cuidados]
+      ..sort(
+        (a, b) => orden == OrdenHistorial.masReciente
+            ? b.fecha.compareTo(a.fecha)
+            : a.fecha.compareTo(b.fecha),
+      );
 
     return Card(
       child: Padding(

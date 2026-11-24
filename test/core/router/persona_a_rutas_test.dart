@@ -14,6 +14,7 @@ import 'package:petcare_flutter/features/auth/domain/auth_repository.dart';
 import 'package:petcare_flutter/features/auth/domain/usuario.dart';
 import 'package:petcare_flutter/features/auth/presentation/sesion_view_model.dart';
 import 'package:petcare_flutter/features/mascotas/domain/mascota.dart';
+import 'package:petcare_flutter/features/mascotas/domain/guardar_mascota_use_case.dart';
 import 'package:petcare_flutter/features/mascotas/domain/mascota_repository.dart';
 import 'package:petcare_flutter/features/tipos_cuidado/domain/tipo_cuidado_repository.dart';
 import 'package:provider/provider.dart';
@@ -68,6 +69,7 @@ void main() {
           ),
           Provider<AuthRepository>.value(value: auth),
           Provider<MascotaRepository>.value(value: mascotas),
+          Provider(create: (_) => GuardarMascotaUseCase(mascotas)),
           Provider<TipoCuidadoRepository>.value(value: tiposCuidado),
           ChangeNotifierProvider<SesionViewModel>.value(value: sesion),
         ],
@@ -76,6 +78,33 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets('mascotas y formulario admiten letra grande en horizontal', (
+    tester,
+  ) async {
+    await montar(tester, usuario: ana);
+    tester.view.physicalSize = const Size(800, 380);
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    router.go('/mascotas');
+    await tester.pumpAndSettle();
+    expect(find.text('Luna'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    router.go('/mascotas/nueva');
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byTooltip('Elegir fecha de nacimiento'),
+      140,
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.byTooltip('Elegir fecha de nacimiento'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('las rutas públicas abren las vistas de registro e ingreso', (
     tester,

@@ -59,7 +59,12 @@ class _MascotaFormScreenState extends State<MascotaFormScreen> {
       );
       if (elegida != null) {
         final bytes = await elegida.readAsBytes();
-        if (mounted) setState(() { foto = elegida; fotoBytes = bytes; });
+        if (mounted) {
+          setState(() {
+            foto = elegida;
+            fotoBytes = bytes;
+          });
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -125,85 +130,95 @@ class _MascotaFormScreenState extends State<MascotaFormScreen> {
       appBar: AppBar(
         title: Text(vm.id == null ? 'Registrar mascota' : 'Editar mascota'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Center(
-            child: CircleAvatar(
-              radius: 45,
-              backgroundImage: fotoBytes == null
-                  ? null
-                  : MemoryImage(fotoBytes!),
-              child: foto == null ? const Icon(Icons.pets, size: 40) : null,
-            ),
-          ),
-          TextButton.icon(
-            onPressed: vm.guardando ? null : _elegirFoto,
-            icon: const Icon(Icons.photo_library_outlined),
-            label: const Text('Elegir foto'),
-          ),
-          TextField(
-            controller: nombre,
-            decoration: InputDecoration(
-              labelText: 'Nombre *',
-              errorText: vm.errores['nombre'],
-            ),
-          ),
-          TextField(
-            controller: especie,
-            decoration: InputDecoration(
-              labelText: 'Especie *',
-              errorText: vm.errores['especie'],
-            ),
-          ),
-          TextField(
-            controller: raza,
-            decoration: const InputDecoration(labelText: 'Raza'),
-          ),
-          TextField(
-            controller: sexo,
-            decoration: const InputDecoration(labelText: 'Sexo'),
-          ),
-          TextField(
-            controller: peso,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: 'Peso (kg)',
-              errorText: errorPeso ?? vm.errores['pesoKg'],
-            ),
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Fecha de nacimiento'),
-            subtitle: Text(
-              fecha == null
-                  ? 'Sin fecha'
-                  : '${fecha!.day}/${fecha!.month}/${fecha!.year}',
-            ),
-            trailing: IconButton(
-              onPressed: _seleccionarFecha,
-              icon: const Icon(Icons.calendar_today),
-            ),
-          ),
-          if (fecha != null)
-            TextButton(
-              onPressed: () => setState(() => fecha = null),
-              child: const Text('Quitar fecha'),
-            ),
-          if (vm.error != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                vm.error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              Center(
+                child: CircleAvatar(
+                  radius: 45,
+                  backgroundImage: fotoBytes == null
+                      ? null
+                      : MemoryImage(fotoBytes!),
+                  child: foto == null ? const Icon(Icons.pets, size: 40) : null,
+                ),
               ),
-            ),
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: vm.guardando ? null : _guardar,
-            child: Text(vm.guardando ? 'Guardando…' : 'Guardar'),
+              TextButton.icon(
+                onPressed: vm.guardando ? null : _elegirFoto,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: const Text('Elegir foto'),
+              ),
+              TextField(
+                controller: nombre,
+                decoration: InputDecoration(
+                  labelText: 'Nombre *',
+                  errorText: vm.errores['nombre'],
+                ),
+              ),
+              TextField(
+                controller: especie,
+                decoration: InputDecoration(
+                  labelText: 'Especie *',
+                  errorText: vm.errores['especie'],
+                ),
+              ),
+              TextField(
+                controller: raza,
+                decoration: const InputDecoration(labelText: 'Raza'),
+              ),
+              TextField(
+                controller: sexo,
+                decoration: const InputDecoration(labelText: 'Sexo'),
+              ),
+              TextField(
+                controller: peso,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Peso (kg)',
+                  errorText: errorPeso ?? vm.errores['pesoKg'],
+                ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Fecha de nacimiento'),
+                subtitle: Text(
+                  fecha == null
+                      ? 'Sin fecha'
+                      : '${fecha!.day}/${fecha!.month}/${fecha!.year}',
+                ),
+                trailing: IconButton(
+                  tooltip: 'Elegir fecha de nacimiento',
+                  onPressed: _seleccionarFecha,
+                  icon: const Icon(Icons.calendar_today),
+                ),
+              ),
+              if (fecha != null)
+                TextButton(
+                  onPressed: () => setState(() => fecha = null),
+                  child: const Text('Quitar fecha'),
+                ),
+              if (vm.error != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    vm.error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: vm.guardando ? null : _guardar,
+                child: Text(vm.guardando ? 'Guardando…' : 'Guardar'),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
