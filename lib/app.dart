@@ -12,6 +12,9 @@ import 'features/auth/data/auth_service.dart';
 import 'features/auth/domain/auth_repository.dart';
 import 'features/auth/presentation/sesion_view_model.dart';
 import 'features/cuidados/domain/cuidado_repository.dart';
+import 'features/mascotas/data/mascota_repository_impl.dart';
+import 'features/mascotas/data/mascota_service.dart';
+import 'features/mascotas/domain/guardar_mascota_use_case.dart';
 import 'features/mascotas/domain/mascota_repository.dart';
 import 'features/tipos_cuidado/domain/tipo_cuidado_repository.dart';
 
@@ -42,13 +45,21 @@ class PetCareApp extends StatelessWidget {
         Provider<AuthService>(
           create: (context) => AuthService(context.read<SupabaseClient>()),
         ),
+        Provider<MascotaService>(
+          create: (context) => MascotaService(context.read<SupabaseClient>()),
+        ),
 
         // Repositorios
         Provider<AuthRepository>(
           create: (context) => AuthRepositoryImpl(context.read<AuthService>()),
         ),
         Provider<MascotaRepository>(
-          create: (_) => MascotaRepositoryProvisional(),
+          create: (context) =>
+              MascotaRepositoryImpl(context.read<MascotaService>()),
+        ),
+        Provider<GuardarMascotaUseCase>(
+          create: (context) =>
+              GuardarMascotaUseCase(context.read<MascotaRepository>()),
         ),
         Provider<TipoCuidadoRepository>(
           create: (_) => TipoCuidadoRepositoryProvisional(),
