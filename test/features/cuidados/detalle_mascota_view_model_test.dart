@@ -14,6 +14,22 @@ class MascotasRepositorioFalso extends Mock implements MascotaRepository {}
 class CuidadosRepositorioFalso extends Mock implements CuidadoRepository {}
 
 void main() {
+  const mascota = Mascota(
+    id: 1,
+    nombre: 'Luna',
+    especie: 'Perro',
+    raza: 'Mestiza',
+    pesoKg: 12.0,
+  );
+
+  final cuidado = Cuidado(
+    id: 10,
+    mascotaId: 1,
+    tipoCuidadoId: 2,
+    tipoNombre: 'Vacunación',
+    fecha: DateTime(2026, 11, 20),
+  );
+
   late MascotasRepositorioFalso mascotasRepositorio;
   late CuidadosRepositorioFalso cuidadosRepositorio;
   late DetalleMascotaViewModel viewModel;
@@ -21,35 +37,13 @@ void main() {
   setUp(() {
     mascotasRepositorio = MascotasRepositorioFalso();
     cuidadosRepositorio = CuidadosRepositorioFalso();
-  });
-
-  tearDown(() {
-    viewModel.dispose();
-  });
-
-  test('carga la mascota y sus cuidados', () async {
-    final mascota = Mascota(
-      id: 1,
-      nombre: 'Luna',
-      especie: 'Perro',
-      raza: 'Mestiza',
-      fechaNacimiento: DateTime(2022, 1, 1),
-      pesoKg: 12.0,
-      fotoPath: null,
-    );
-    final cuidado = Cuidado(
-      id: 10,
-      mascotaId: 1,
-      tipoCuidadoId: 2,
-      tipoNombre: 'Vacunación',
-      fecha: DateTime(2026, 11, 20),
-      notas: null,
-    );
 
     when(() => mascotasRepositorio.obtenerMascota(1))
         .thenAnswer((_) async => mascota);
+
     when(() => mascotasRepositorio.urlDeFoto(mascota))
         .thenAnswer((_) async => null);
+
     when(() => cuidadosRepositorio.obtenerCuidadosDeMascota(1))
         .thenAnswer((_) async => [cuidado]);
 
@@ -58,24 +52,36 @@ void main() {
       mascotasRepositorio,
       cuidadosRepositorio,
     );
+  });
+
+  tearDown(() {
+    viewModel.dispose();
+  });
+
+  test('pasa de cargando a datos con la mascota y sus cuidados', () async {
+    final estados = <EstadoCarga<DetalleMascotaDatos>>[];
+
+    viewModel.addListener(() {
+      estados.add(viewModel.estado);
+    });
 
     await viewModel.cargar();
 
-    expect(viewModel.estado, isA<Datos<DetalleMascotaDatos>>());
+    expect(estados, [
+      isA<Cargando<DetalleMascotaDatos>>(),
+      isA<Datos<DetalleMascotaDatos>>(),
+    ]);
+
     final datos = (viewModel.estado as Datos<DetalleMascotaDatos>).valor;
+
     expect(datos.mascota, mascota);
+    expect(datos.urlFoto, isNull);
     expect(datos.cuidados, [cuidado]);
   });
 
-  test('si falla al obtener la mascota muestra error', () async {
+  test('muestra error de red y recupera los datos al reintentar', () async {
     when(() => mascotasRepositorio.obtenerMascota(1))
         .thenThrow(const FalloRed('Sin conexión'));
-
-    viewModel = DetalleMascotaViewModel(
-      1,
-      mascotasRepositorio,
-      cuidadosRepositorio,
-    );
 
     await viewModel.cargar();
 
@@ -84,52 +90,64 @@ void main() {
       (viewModel.estado as ErrorCarga<DetalleMascotaDatos>).mensaje,
       'Sin conexión',
     );
-  });
 
-  test('elimina cuidado y recarga el historial', () async {
-    final mascota = Mascota(
-      id: 1,
-      nombre: 'Luna',
-      especie: 'Perro',
-      raza: 'Mestiza',
-      fechaNacimiento: DateTime(2022, 1, 1),
-      pesoKg: 12.0,
-      fotoPath: null,
-    );
-
-    when(() => cuidadosRepositorio.eliminar(10)).thenAnswer((_) async {});
     when(() => mascotasRepositorio.obtenerMascota(1))
         .thenAnswer((_) async => mascota);
-    when(() => mascotasRepositorio.urlDeFoto(mascota))
-        .thenAnswer((_) async => null);
+
+    final estadosReintento = <EstadoCarga<DetalleMascotaDatos>>[];
+
+    viewModel.addListener(() {
+      estadosReintento.add(viewModel.estado);
+    });
+
+    await viewModel.cargar();
+
+    expect(estadosReintento, [
+      isA<Cargando<DetalleMascotaDatos>>(),
+      isA<Datos<DetalleMascotaDatos>>(),
+    ]);
+
+    final datos = (viewModel.estado as Datos<DetalleMascotaDatos>).valor;
+
+    expect(datos.mascota, mascota);
+    expect(datos.cuidados, [cuidado]);
+
+    verify(() => mascotasRepositorio.obtenerMascota(1)).called(2);
+  });
+
+  test('elimina un cuidado y actualiza el historial', () async {
+    await viewModel.cargar();
+
+    final datosIniciales =
+        (viewModel.estado as Datos<DetalleMascotaDatos>).valor;
+    expect(datosIniciales.cuidados, [cuidado]);
+
+    when(() => cuidadosRepositorio.eliminar(10)).thenAnswer((_) async {});
+
     when(() => cuidadosRepositorio.obtenerCuidadosDeMascota(1))
         .thenAnswer((_) async => []);
-
-    viewModel = DetalleMascotaViewModel(
-      1,
-      mascotasRepositorio,
-      cuidadosRepositorio,
-    );
 
     final error = await viewModel.eliminarCuidado(10);
 
     expect(error, isNull);
+    expect(viewModel.estado, isA<Datos<DetalleMascotaDatos>>());
+
+    final datosFinales = (viewModel.estado as Datos<DetalleMascotaDatos>).valor;
+    expect(datosFinales.mascota, mascota);
+    expect(datosFinales.cuidados, isEmpty);
+
     verify(() => cuidadosRepositorio.eliminar(10)).called(1);
-    verify(() => cuidadosRepositorio.obtenerCuidadosDeMascota(1)).called(1);
+
+    verify(() => cuidadosRepositorio.obtenerCuidadosDeMascota(1)).called(2);
   });
 
-  test('elimina la mascota con su id', () async {
+  test('elimina la mascota con su identificador', () async {
     when(() => mascotasRepositorio.eliminar(1)).thenAnswer((_) async {});
-
-    viewModel = DetalleMascotaViewModel(
-      1,
-      mascotasRepositorio,
-      cuidadosRepositorio,
-    );
 
     final error = await viewModel.eliminarMascota();
 
     expect(error, isNull);
+
     verify(() => mascotasRepositorio.eliminar(1)).called(1);
   });
 }

@@ -1,6 +1,3 @@
-import '../../ajustes/domain/preferencias.dart';
-import '../../ajustes/presentation/ajustes_view_model.dart';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../core/estado/estado_carga.dart';
 import '../../../core/widgets/vista_error.dart';
 import '../../../core/widgets/vista_vacia.dart';
+import '../../ajustes/domain/preferencias.dart';
+import '../../ajustes/presentation/ajustes_view_model.dart';
 import '../../mascotas/domain/mascota.dart';
 import '../domain/cuidado.dart';
 import 'detalle_mascota_view_model.dart';
@@ -84,6 +83,109 @@ class DetalleMascotaScreen extends StatelessWidget {
     );
   }
 
+  Widget _fotoMascota(BuildContext context, Mascota mascota, String? urlFoto) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 180,
+            height: 180,
+            child: Material(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: urlFoto == null
+                    ? null
+                    : () => _verFotoCompleta(context, urlFoto, mascota.nombre),
+                child: urlFoto == null
+                    ? const Center(child: Icon(Icons.pets_outlined, size: 64))
+                    : Image.network(
+                        urlFoto,
+                        width: 180,
+                        height: 180,
+                        fit: BoxFit.cover,
+                        semanticLabel: 'Foto de ${mascota.nombre}',
+                        errorBuilder: (_, _, _) => const Center(
+                          child: Icon(Icons.pets_outlined, size: 64),
+                        ),
+                      ),
+              ),
+            ),
+          ),
+          if (urlFoto != null)
+            TextButton.icon(
+              onPressed: () =>
+                  _verFotoCompleta(context, urlFoto, mascota.nombre),
+              icon: const Icon(Icons.zoom_in),
+              label: const Text('Ver foto completa'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _verFotoCompleta(
+    BuildContext context,
+    String urlFoto,
+    String nombre,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
+            width: 600,
+            height: MediaQuery.sizeOf(dialogContext).height * 0.75,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Foto de $nombre',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(dialogContext).textTheme.titleMedium,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Cerrar foto',
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Image.network(
+                      urlFoto,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.contain,
+                      semanticLabel: 'Foto completa de $nombre',
+                      errorBuilder: (_, _, _) => const Center(
+                        child: Text('No se pudo cargar la foto.'),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _datosMascota(
     BuildContext context,
     Mascota mascota,
@@ -99,22 +201,7 @@ class DetalleMascotaScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (urlFoto != null)
-              Image.network(
-                urlFoto,
-                width: double.infinity,
-                height: 220,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const SizedBox(
-                  height: 100,
-                  child: Center(child: Icon(Icons.pets_outlined, size: 48)),
-                ),
-              )
-            else
-              const SizedBox(
-                height: 100,
-                child: Center(child: Icon(Icons.pets_outlined, size: 48)),
-              ),
+            _fotoMascota(context, mascota, urlFoto),
             const SizedBox(height: 16),
             Text(mascota.nombre, style: Theme.of(context).textTheme.titleLarge),
             Text('Especie: ${mascota.especie}'),
@@ -191,6 +278,7 @@ class DetalleMascotaScreen extends StatelessWidget {
             else
               ...ordenados.map((cuidado) {
                 final fecha = localizaciones.formatMediumDate(cuidado.fecha);
+
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
@@ -248,6 +336,7 @@ class DetalleMascotaScreen extends StatelessWidget {
     if (confirmar != true || !context.mounted) return;
 
     final mensaje = await modelo.eliminarCuidado(cuidadoId);
+
     if (mensaje != null && context.mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(mensaje)));
@@ -281,6 +370,7 @@ class DetalleMascotaScreen extends StatelessWidget {
     if (confirmar != true || !context.mounted) return;
 
     final mensaje = await modelo.eliminarMascota();
+
     if (!context.mounted) return;
 
     if (mensaje == null) {
